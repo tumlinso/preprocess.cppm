@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 clang-tools-18 cmake ninja-build
+      - name: Build pinned anndata core
+        run: |
+          git clone https://github.com/tumlinso/anndata.cppm.git build/deps/source/anndata
+          git -C build/deps/source/anndata checkout dc946845e1457299351b0ffc4ba36ef91d49db7b
+          sh tools/build_anndata.sh build/deps/source/anndata
+      - name: Build and test native and installed consumers
+        run: |
+          cmake --workflow --preset native-check
+          cmake --preset shared
+          cmake --build --preset shared
+          ctest --preset shared
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 clang-tools-18 cmake ninja-build
+      - name: Build pinned anndata core
+        run: |
+          git clone https://github.com/tumlinso/anndata.cppm.git build/deps/source/anndata
+          git -C build/deps/source/anndata checkout dc946845e1457299351b0ffc4ba36ef91d49db7b
+          sh tools/build_anndata.sh build/deps/source/anndata
+      - name: Run ASan and UBSan
+        run: |
+          cmake --preset sanitizers
+          cmake --build --preset sanitizers
+          ctest --preset sanitizers
+
+  scanpy-reference:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install compiler and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 clang-tools-18 cmake ninja-build
+      - name: Build pinned anndata core
+        run: |
+          git clone https://github.com/tumlinso/anndata.cppm.git build/deps/source/anndata
+          git -C build/deps/source/anndata checkout dc946845e1457299351b0ffc4ba36ef91d49db7b
+          sh tools/build_anndata.sh build/deps/source/anndata
+      - name: Install Scanpy reference environment
+        run: python -m pip install -r tests/requirements-reference.txt
+      - name: Compare against Scanpy
+        run: |
+          cmake --preset release -DPREPROCESS_BUILD_QUALIFICATION=ON
+          cmake --build --preset release --target preprocess_interop_driver --parallel 2
+          python tools/qualify.py --driver build/release/preprocess_interop_driver

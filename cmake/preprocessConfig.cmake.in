@@ -1,0 +1,79 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(anndata 0.1 CONFIG REQUIRED)
+
+if(TARGET preprocess::preprocess)
+  check_required_components(preprocess)
+  return()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/preprocessTargets.cmake")
+
+# CMake 3.28 may synthesize duplicate module-interface targets when several
+# executables consume an exported CXX_MODULES target. Build the installed
+# interfaces once and expose a regular interface target to consumers.
+get_target_property(_preprocess_type preprocess::preprocess_binary TYPE)
+if(_preprocess_type STREQUAL "STATIC_LIBRARY")
+  add_library(preprocess_cppm_binary_proxy STATIC IMPORTED GLOBAL)
+elseif(_preprocess_type STREQUAL "SHARED_LIBRARY")
+  add_library(preprocess_cppm_binary_proxy SHARED IMPORTED GLOBAL)
+else()
+  message(FATAL_ERROR "Unsupported installed preprocess binary type: ${_preprocess_type}")
+endif()
+
+get_target_property(_preprocess_configs preprocess::preprocess_binary IMPORTED_CONFIGURATIONS)
+if(_preprocess_configs)
+  set_property(TARGET preprocess_cppm_binary_proxy PROPERTY IMPORTED_CONFIGURATIONS "${_preprocess_configs}")
+endif()
+foreach(_property IN ITEMS IMPORTED_LOCATION IMPORTED_IMPLIB IMPORTED_SONAME
+    IMPORTED_NO_SONAME INTERFACE_LINK_LIBRARIES INTERFACE_LINK_OPTIONS)
+  get_property(_is_set TARGET preprocess::preprocess_binary PROPERTY "${_property}" SET)
+  if(_is_set)
+    get_target_property(_value preprocess::preprocess_binary "${_property}")
+    set_property(TARGET preprocess_cppm_binary_proxy PROPERTY "${_property}" "${_value}")
+  endif()
+endforeach()
+foreach(_config IN LISTS _preprocess_configs)
+  foreach(_property IN ITEMS IMPORTED_LOCATION IMPORTED_IMPLIB IMPORTED_SONAME
+      IMPORTED_NO_SONAME IMPORTED_LINK_DEPENDENT_LIBRARIES IMPORTED_LINK_INTERFACE_LANGUAGES)
+    set(_configured "${_property}_${_config}")
+    get_property(_is_set TARGET preprocess::preprocess_binary PROPERTY "${_configured}" SET)
+    if(_is_set)
+      get_target_property(_value preprocess::preprocess_binary "${_configured}")
+      set_property(TARGET preprocess_cppm_binary_proxy PROPERTY "${_configured}" "${_value}")
+    endif()
+  endforeach()
+endforeach()
+
+get_target_property(_module_files preprocess::preprocess_binary CXX_MODULE_SET)
+get_target_property(_module_dirs preprocess::preprocess_binary CXX_MODULE_DIRS)
+add_library(preprocess_cppm_module_interfaces STATIC EXCLUDE_FROM_ALL)
+set_target_properties(preprocess_cppm_module_interfaces PROPERTIES
+  CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE ON)
+target_sources(preprocess_cppm_module_interfaces PUBLIC FILE_SET CXX_MODULES
+  BASE_DIRS ${_module_dirs} FILES ${_module_files})
+target_link_libraries(preprocess_cppm_module_interfaces PUBLIC preprocess_cppm_binary_proxy)
+
+foreach(_property IN ITEMS COMPILE_DEFINITIONS COMPILE_FEATURES COMPILE_OPTIONS)
+  get_property(_is_set TARGET preprocess::preprocess_binary PROPERTY
+    "IMPORTED_CXX_MODULES_${_property}" SET)
+  if(_is_set)
+    get_target_property(_value preprocess::preprocess_binary
+      "IMPORTED_CXX_MODULES_${_property}")
+    set_property(TARGET preprocess_cppm_module_interfaces APPEND PROPERTY
+      "${_property}" "${_value}")
+  endif()
+  get_property(_is_set TARGET preprocess::preprocess_binary PROPERTY
+    "INTERFACE_${_property}" SET)
+  if(_is_set)
+    get_target_property(_value preprocess::preprocess_binary "INTERFACE_${_property}")
+    set_property(TARGET preprocess_cppm_module_interfaces APPEND PROPERTY
+      "INTERFACE_${_property}" "${_value}")
+  endif()
+endforeach()
+
+add_library(preprocess::preprocess INTERFACE IMPORTED GLOBAL)
+set_property(TARGET preprocess::preprocess PROPERTY
+  INTERFACE_LINK_LIBRARIES preprocess_cppm_module_interfaces)
+check_required_components(preprocess)

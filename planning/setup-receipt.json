@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "project": "preprocess-cppm",
+  "repository": "preprocess-cppm",
+  "root": "/home/tumlinson/preprocess.cppm",
+  "registration": {
+    "command": "project-control workspace add preprocess-cppm preprocess-cppm /home/tumlinson/preprocess.cppm --authority",
+    "exit_code": 0,
+    "verified_by": "project-control workspace list"
+  },
+  "workflow": {
+    "scope": "registration_only",
+    "user_authorized_execution_without_handle": true,
+    "service_restarted": false,
+    "authority_initialized": false,
+    "sessions_provisioned": false,
+    "native_task_claimed": false,
+    "note": "The user explicitly requested registration only, prohibited a service restart, and authorized implementation without a Project Control workflow handle."
+  },
+  "github": {
+    "repository": "tumlinso/preprocess.cppm",
+    "url": "https://github.com/tumlinso/preprocess.cppm",
+    "description": "Native C++20 preprocessing for biological data, built on anndata.cppm with Scanpy-aligned numerical reference implementations.",
+    "topics": ["cpp", "cpp20", "cpp-modules", "bioinformatics", "single-cell", "anndata", "scanpy", "preprocessing"],
+    "metadata_verified_by": "gh repo view tumlinso/preprocess.cppm --json nameWithOwner,description,url,repositoryTopics"
+  }
+}

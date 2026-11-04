@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.28)
+project(preprocess_installed_consumer LANGUAGES CXX)
+set(CMAKE_CXX_EXTENSIONS OFF)
+find_package(preprocess 0.1 CONFIG REQUIRED)
+add_executable(consumer main.cpp)
+target_link_libraries(consumer PRIVATE preprocess::preprocess)
+add_executable(consumer_again second.cpp)
+target_link_libraries(consumer_again PRIVATE preprocess::preprocess)
