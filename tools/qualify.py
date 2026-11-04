@@ -298,7 +298,9 @@ def source_info():
     if versions["scanpy"] != VERSION:
         raise RuntimeError(f"Scanpy {VERSION} is required; found {versions['scanpy']}")
     hashes = {f: hashlib.sha256((base / f).read_bytes()).hexdigest() for f in files}
-    native_sources = ("src/preprocess.cppm", "src/preprocess.cpp", "src/hvg.cpp", "src/matrix.hpp", "tests/interop_driver.cpp")
+    native_sources = [str(p.relative_to(ROOT)) for p in sorted((ROOT / "src").rglob("*"))
+                      if p.suffix in (".cppm", ".cpp", ".hpp")]
+    native_sources.append("tests/interop_driver.cpp")
     native_hashes = {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in native_sources}
     return {"versions": versions, "scanpy_source_sha256": hashes, "native_source_sha256": native_hashes,
             "qualifier_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),

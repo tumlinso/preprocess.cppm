@@ -27,6 +27,9 @@ execution, and dataset orchestration as separate concerns.
   implementation-only code in compiled source files.
 - Use direct arrays, pointers, extents, strides, sparse offsets and indices.
   Make allocation, conversion, mutation, and materialization explicit.
+- Use anndata's views directly. Keep shape, layout, lifetime and buffer
+  representation with anndata; do not maintain a parallel matrix abstraction.
+  Preprocess owns numerical operations and their additional contracts.
 - Resolve validation and representation dispatch at acquisition boundaries.
   Keep element loops free of type-erased dispatch, repeated validation and
   hidden synchronization. Callers own parallel execution.

@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "observed_at_unix": 1793794332.3810916,
+  "observed_at_unix": 1793796782.2783093,
   "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
   "cpu_affinity": [
     2
   ],
   "cpu_model": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz",
-  "driver_sha256": "d5d1afbf689264577f0eca81912daf44157cab309b4e20c30e9675976fb8ad1b",
+  "driver_sha256": "078d525097bfde9e98da1dcfc30ab122de3a5217da8a6dd4508ae6cd284b6ed6",
   "repeats": 3,
   "timeout_seconds_per_process": 30,
   "threads": 1,
@@ -30,7 +30,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 0.001166,
+      "median_milliseconds": 0.000849,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -46,7 +46,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 65,
       "requested_allocation_bytes": 215448,
-      "median_milliseconds": 5.500414,
+      "median_milliseconds": 4.138814,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -62,7 +62,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 14,
       "requested_allocation_bytes": 22976,
-      "median_milliseconds": 3.800665,
+      "median_milliseconds": 3.739812,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -78,7 +78,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 12,
       "requested_allocation_bytes": 34240,
-      "median_milliseconds": 5.130379,
+      "median_milliseconds": 4.350253,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -94,7 +94,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 7.961948,
+      "median_milliseconds": 6.401345,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -110,7 +110,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 22,
       "requested_allocation_bytes": 37536,
-      "median_milliseconds": 7.356109,
+      "median_milliseconds": 5.922331,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -126,7 +126,7 @@
       "input_bytes": 4194304,
       "allocation_calls": 293,
       "requested_allocation_bytes": 130688,
-      "median_milliseconds": 12.398063,
+      "median_milliseconds": 11.772416,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -142,7 +142,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 0.001228,
+      "median_milliseconds": 0.000712,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -158,7 +158,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 65,
       "requested_allocation_bytes": 215448,
-      "median_milliseconds": 5.267454,
+      "median_milliseconds": 4.738699,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -174,7 +174,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 14,
       "requested_allocation_bytes": 22976,
-      "median_milliseconds": 3.914994,
+      "median_milliseconds": 4.410394,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -190,7 +190,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 12,
       "requested_allocation_bytes": 34240,
-      "median_milliseconds": 5.091502,
+      "median_milliseconds": 4.2084,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -206,7 +206,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 7.797721,
+      "median_milliseconds": 6.407266,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -222,7 +222,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 22,
       "requested_allocation_bytes": 37536,
-      "median_milliseconds": 6.720153,
+      "median_milliseconds": 6.215238,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -238,7 +238,7 @@
       "input_bytes": 8388608,
       "allocation_calls": 293,
       "requested_allocation_bytes": 130688,
-      "median_milliseconds": 12.091746,
+      "median_milliseconds": 12.599907,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -270,7 +270,7 @@
       "input_bytes": 964128,
       "allocation_calls": 65,
       "requested_allocation_bytes": 215448,
-      "median_milliseconds": 1.108747,
+      "median_milliseconds": 1.09457,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -286,7 +286,7 @@
       "input_bytes": 964128,
       "allocation_calls": 14,
       "requested_allocation_bytes": 22976,
-      "median_milliseconds": 0.860093,
+      "median_milliseconds": 0.785778,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -302,7 +302,7 @@
       "input_bytes": 964128,
       "allocation_calls": 12,
       "requested_allocation_bytes": 34240,
-      "median_milliseconds": 1.443795,
+      "median_milliseconds": 1.174877,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -318,7 +318,7 @@
       "input_bytes": 964128,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 2.171885,
+      "median_milliseconds": 1.937666,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -334,7 +334,7 @@
       "input_bytes": 964128,
       "allocation_calls": 22,
       "requested_allocation_bytes": 37536,
-      "median_milliseconds": 2.373392,
+      "median_milliseconds": 2.100845,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -350,7 +350,7 @@
       "input_bytes": 964128,
       "allocation_calls": 293,
       "requested_allocation_bytes": 130688,
-      "median_milliseconds": 3.301956,
+      "median_milliseconds": 3.125832,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -366,7 +366,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 0.001166,
+      "median_milliseconds": 0.000702,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -382,7 +382,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 65,
       "requested_allocation_bytes": 215448,
-      "median_milliseconds": 1.073206,
+      "median_milliseconds": 0.988805,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -398,7 +398,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 14,
       "requested_allocation_bytes": 22976,
-      "median_milliseconds": 0.850383,
+      "median_milliseconds": 0.750113,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -414,7 +414,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 12,
       "requested_allocation_bytes": 34240,
-      "median_milliseconds": 1.412056,
+      "median_milliseconds": 1.166617,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -430,7 +430,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 0,
       "requested_allocation_bytes": 0,
-      "median_milliseconds": 2.035692,
+      "median_milliseconds": 1.85031,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -446,7 +446,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 22,
       "requested_allocation_bytes": 37536,
-      "median_milliseconds": 2.311674,
+      "median_milliseconds": 2.025842,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0
@@ -462,7 +462,7 @@
       "input_bytes": 1437996,
       "allocation_calls": 293,
       "requested_allocation_bytes": 130688,
-      "median_milliseconds": 3.225856,
+      "median_milliseconds": 3.342694,
       "median_peak_rss_kib": 17920,
       "median_baseline_peak_rss_kib": 17920,
       "median_incremental_high_water_kib": 0

@@ -107,6 +107,10 @@ void scaling_and_strides() {
     auto reversed = anndata::Array::borrow_dense(values.data()+12,{4,4},{-4,1});
     auto normal = data(); auto rs = preprocess::feature_stats(reversed.view()), ns = preprocess::feature_stats(normal.view()); equal(rs.mean.view(),ns.mean.view());
     preprocess::log1p(reversed.edit()); check(close(values[0],std::log(2.0)),"negative strides not written correctly");
+    auto logarithm_input = matrix<double>(2,2,{1,3,7,15}); double reversed_output[4]{};
+    auto destination = anndata::Array::borrow_dense(reversed_output+2,{2,2},{-2,1});
+    preprocess::log1p_into(logarithm_input.view(),destination.edit(),2);
+    check(close(reversed_output[0],3) && close(reversed_output[1],4) && close(reversed_output[2],1) && close(reversed_output[3],2),"negative-stride destination changed logical result order");
     auto gathered = normal.view().select({anndata::Axis::gather({2,0,3}),anndata::Axis::all()});
     rejects([&] { preprocess::qc(gathered); });
     auto materialized = preprocess::dense_copy(gathered); check(materialized.extent(0) == 3 && materialized.view().dense<double>().data()[0] == 2,"explicit gather materialization failed");
@@ -123,6 +127,11 @@ void contracts_and_annotations() {
     auto src = anndata::Array::borrow_dense(storage,{2,2},{2,1});
     auto overlap = anndata::Array::borrow_dense(storage+1,{2,2},{2,1});
     rejects([&] { preprocess::log1p_into(src.view(),overlap.edit()); }); check(storage[0] == 1 && storage[1] == 2,"overlap rejection changed data");
+    double empty_output[4]{1,2,3,4}; long empty_offsets[]{0,0,0};
+    auto empty_alias = anndata::Array::borrow_sparse(anndata::Layout::csr,2,2,0,empty_output+1,static_cast<int*>(nullptr),empty_offsets);
+    auto empty_destination = anndata::Array::borrow_dense(empty_output,{2,2},{2,1});
+    preprocess::log1p_into(empty_alias.view(),empty_destination.edit());
+    for (auto v : empty_output) check(v == 0,"zero-entry sparse source falsely overlapped destination");
     auto repeated = anndata::Array::borrow_dense(storage,{2,2},{0,1}); rejects([&] { preprocess::log1p(repeated.edit()); });
     double v[]{1,2}; int idx[]{0,0}; long off[]{0,2};
     auto dup = anndata::Array::borrow_sparse(anndata::Layout::csr,1,2,2,v,idx,off);

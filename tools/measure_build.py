@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -14,9 +15,20 @@ import time
 
 def timed(argv, cwd=None):
     start = time.monotonic()
-    r = subprocess.run([str(v) for v in argv], cwd=cwd, text=True, capture_output=True, timeout=30)
-    if r.returncode:
-        raise RuntimeError(f"Command failed: {argv}\n{r.stdout}\n{r.stderr}")
+    process = subprocess.Popen([str(v) for v in argv], cwd=cwd, text=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    try:
+        out, err = process.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            process.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.communicate()
+        raise
+    if process.returncode:
+        raise RuntimeError(f"Command failed: {argv}\n{out}\n{err}")
     return time.monotonic() - start
 
 
@@ -47,7 +59,13 @@ def main():
         measures["configure_seconds"] = timed(["cmake", "-S", tree, "-B", build, "-G", "Ninja",
             "-DCMAKE_CXX_COMPILER=clang++-18", "-DCMAKE_BUILD_TYPE=Release", f"-DCMAKE_PREFIX_PATH={dependency}",
             "-DPREPROCESS_BUILD_TESTS=OFF", "-DPREPROCESS_BUILD_QUALIFICATION=OFF"])
-        measures["clean_package_build_seconds"] = timed(["cmake", "--build", build, "-j2"])
+        # Keep each compilation phase bounded while identifying dependency
+        # interface cost separately from the numerical library and example.
+        measures["dependency_module_build_seconds"] = timed(["cmake", "--build", build, "--target", "anndata_cppm_module_interfaces", "-j2"])
+        measures["library_build_seconds"] = timed(["cmake", "--build", build, "--target", "preprocess", "-j2"])
+        measures["example_build_seconds"] = timed(["cmake", "--build", build, "--target", "preprocess_example", "-j2"])
+        measures["clean_package_build_seconds"] = sum(measures[k] for k in
+            ("dependency_module_build_seconds", "library_build_seconds", "example_build_seconds"))
         measures["noop_package_build_seconds"] = timed(["cmake", "--build", build, "-j2"])
         measures["install_seconds"] = timed(["cmake", "--install", build, "--prefix", prefix])
         consumer.mkdir()
@@ -78,6 +96,7 @@ def main():
               "anndata_prefix": str(dependency), "timeout_seconds_per_command": 30,
               "jobs": 2, "measurements": measures, "checks": checks,
               "limits": ["one bounded observation, not a comparative performance claim",
+                         "clean package time sums separately bounded dependency-interface, library and example builds",
                          "cold consumer build includes consumer-local module interface compilation",
                          "warm consumer rebuild includes compiler, scanner, build-system and linker costs"]}
     a.output.parent.mkdir(parents=True, exist_ok=True)

@@ -3211,7 +3211,7 @@
       "variance"
     ]
   },
-  "driver_sha256": "f37147455a011cd707e59b2fc17b80213c001f509994a2178da8c77b4b8808c0",
+  "driver_sha256": "9e6d6fe555c3ac5e5c8f8ea71c7c40a87cd628f91ef117689f1a1588a8a3a809",
   "failed": 0,
   "fixture_sha256": "e59740909d8de54e7917b2d38b1ba15928bc3425ada7dfeef23f11683b945443",
   "format": "preprocess.scanpy-reference.v1",
@@ -3219,14 +3219,14 @@
   "provenance": {
     "fixture_seed": 821047,
     "native_source_sha256": {
-      "src/hvg.cpp": "f5adfcb80901fdae6b07141b77fc8c119de2ed6150dd67f606af72a7dda06d80",
-      "src/matrix.hpp": "42f0fc324f3bb4ba10c3900f77ce4d9eebfaff983a83bc317e39c189774d74a3",
-      "src/preprocess.cpp": "4eafbb6cea2215c9999d29581cd4ede446c97795be1bd6adf2e11974a0d90eda",
+      "src/hvg.cpp": "af246aa43478810f430c1caf81ef63766f088f7acfd1bc325d666699de37316b",
+      "src/numeric.hpp": "7d7e6d6b787db53728133ed6b3723697d2d282c89fa34362bf813ce7ff7a4b46",
+      "src/preprocess.cpp": "40f9374c18d32265a90c7fe6b7e2fb04832619d7f4cd6e558a428d03be34ce0d",
       "src/preprocess.cppm": "c261c1235fdf6411c4f5d3171edf393c2646d68f9a321b04d164ed1abcb65417",
       "tests/interop_driver.cpp": "511d09d61da168f582e092623fa43acbf4e36ad7e13cd0eedb76e78f9afbe4e5"
     },
     "python": "3.12.3",
-    "qualifier_sha256": "fc094576998b4cb4458b700037f1116c5b769ce03bedbb61ee0331c512bd0c7c",
+    "qualifier_sha256": "4d0c0011829949c8e59c02e53f394f77ffb92fc973e1f3c3658ddaa743796d46",
     "requirements_sha256": "9a6fc80b47882db2f065f686de85ad5b15865c00a6b064882865aed8fb7fa079",
     "scanpy_source_sha256": {
       "_highly_variable_genes.py": "04a04f55e1824d820b3b91e5aaa06041a82a5adb65afb16b08b3de1669effa6b",

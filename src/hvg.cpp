@@ -14,7 +14,7 @@ module;
 #include <vector>
 
 module preprocess;
-#include "matrix.hpp"
+#include "numeric.hpp"
 
 namespace preprocess {
 namespace {
@@ -124,23 +124,24 @@ HvgBatch calculate(const std::vector<double>& sum, const std::vector<double>& sq
 } // namespace
 
 HvgResult highly_variable_genes(anndata::ArrayView input, const HvgOptions& o) {
-    Matrix x(input);
-    require(x.rows && x.columns, "HVG requires a nonempty matrix");
+    check_matrix(input); auto rows = input.extent(0), columns = input.extent(1);
+    require(rows && columns, "HVG requires a nonempty matrix");
     require(o.method == HvgMethod::seurat || o.method == HvgMethod::cell_ranger, "unknown HVG method");
     require(o.n_bins > 0 && o.n_bins < std::numeric_limits<std::size_t>::max(), "HVG bin count must be positive");
     require(!o.n_top_genes || *o.n_top_genes > 0, "HVG top count must be positive");
     require(!o.log_base || (std::isfinite(*o.log_base) && *o.log_base > 0 && *o.log_base != 1), "log base must be finite, positive, and unequal to one");
     if (!o.n_top_genes) require(!std::isnan(o.min_mean) && !std::isnan(o.max_mean) && !std::isnan(o.min_disp) && !std::isnan(o.max_disp) && o.min_mean < o.max_mean && o.min_disp < o.max_disp, "invalid HVG cutoffs");
-    std::vector<std::size_t> batch(x.rows, 0), counts(1, x.rows);
+    std::vector<std::size_t> batch(rows, 0), counts(1, rows);
     if (o.batches) {
         auto b = *o.batches;
         b.validate();
-        require(b.rank() == 1 && b.extent(0) == x.rows && b.layout() == anndata::Layout::dense, "batch codes must be a dense vector matching cells");
-        auto bytes = b.bytes(); std::map<std::uint64_t, std::size_t> codes;
+        require(b.rank() == 1 && b.extent(0) == rows && b.layout() == anndata::Layout::dense, "batch codes must be a dense vector matching cells");
+        auto bytes = b.bytes(); const auto* p = bytes.data(); auto stride = bytes.stride_bytes(0);
+        std::map<std::uint64_t, std::size_t> codes;
         numeric(b.dtype(), [&]<class T>() {
             if constexpr (!std::is_integral_v<T> || std::is_same_v<T, bool>) throw std::invalid_argument("batch codes must be nonnegative integers");
-            else for (std::size_t i = 0; i < x.rows; ++i) {
-                T v = load<T>(bytes.data()+std::ptrdiff_t(i)*bytes.stride_bytes(0));
+            else for (std::size_t i = 0; i < rows; ++i) {
+                T v = load<T>(p+std::ptrdiff_t(i)*stride);
                 if constexpr (std::is_signed_v<T>) require(v >= 0, "batch codes must be nonnegative integers");
                 auto key = std::uint64_t(v); auto [it, inserted] = codes.emplace(key, codes.size());
                 batch[i] = it->second;
@@ -148,13 +149,13 @@ HvgResult highly_variable_genes(anndata::ArrayView input, const HvgOptions& o) {
         });
         counts.assign(codes.size(), 0); for (auto b : batch) ++counts[b];
     }
-    auto B = counts.size(), g = x.columns;
+    auto B = counts.size(), g = columns;
     require(B <= std::numeric_limits<std::size_t>::max()/g, "HVG batch workspace overflow");
     std::vector<double> sum(B*g), square(B*g);
     std::vector<std::uint8_t> expressed(B*g);
     double multiplier = o.log_base ? std::log(*o.log_base) : 1;
     numeric(input.dtype(), [&]<class T>() {
-        x.each<T>([&](std::size_t i, std::size_t j, double v, std::size_t) {
+        entries<T>(input,[&](std::size_t i, std::size_t j, double v, std::size_t) {
             require(std::isfinite(v), "HVG input must be finite");
             auto k = batch[i]*g+j; expressed[k] |= v != 0;
             if (o.method == HvgMethod::seurat) v = std::expm1(v*multiplier);

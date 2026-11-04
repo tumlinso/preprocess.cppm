@@ -22,7 +22,7 @@ This document records the v0.1 validation and its numerical conventions.
   of the package checks.
 - Runtime, working-memory, allocation, module import/build and private
   implementation rebuild measurements use bounded identical workloads. Each
-  initial probe is limited to 30 seconds. Measurements identify sources,
+  measured subprocess is limited to 30 seconds. Measurements identify sources,
   binaries, inputs, compiler and conditions.
 
 ## Results
@@ -66,11 +66,17 @@ source copy, two build jobs, and a 30-second timeout per command:
 
 | Observation | Seconds |
 |---|---:|
-| Clean package build | 27.71 |
-| Cold installed-consumer build, including module interfaces | 8.94 |
-| Warm consumer rebuild | 0.29 |
-| Private implementation rebuild | 19.42 |
+| Clean package build, sum of bounded phases | 36.01 |
+| Cold installed-consumer build, including module interfaces | 8.79 |
+| Warm consumer rebuild | 0.31 |
+| Private implementation rebuild | 24.85 |
 | Consumer rebuild after private implementation edit | 0.14 |
+
+The clean aggregate comprises dependency-module compilation (8.61 seconds),
+library compilation (26.51 seconds), and the example (0.88 seconds). Combined
+clean-build probes reached the 30-second command cap, so the current probe
+records each phase separately. These phases run sequentially; the aggregate
+is not a single build-command timing.
 
 A private implementation edit preserved package BMIs and all consumer BMIs and
 objects. The consumer only needed relinking. These are single observations on

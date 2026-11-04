@@ -18,6 +18,11 @@ dense_copy explicitly materializes sparse or logical gather input. Transform
 overloads accepting ArrayEdit mutate that buffer; their *_into counterparts
 read a source and write a supplied destination. There is no implicit deep copy.
 
+The implementation uses anndata's dense and sparse views directly, with local
+pointers, dimensions and strides for each calculation. Preprocessing adds
+operation-specific checks and calculations without another matrix descriptor
+or lifetime model. Same-dtype dense copies delegate to anndata's `copy_into`.
+
 Dense matrices support strides. Sparse inputs must be canonical CSR or CSC;
 structural offsets and indices retain independent widths, and explicitly stored
 zeros do not alter mathematical values. A gather without a direct addressable
