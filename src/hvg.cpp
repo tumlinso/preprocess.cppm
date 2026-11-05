@@ -123,7 +123,7 @@ HvgBatch calculate(const std::vector<double>& sum, const std::vector<double>& sq
 }
 } // namespace
 
-HvgResult highly_variable_genes(anndata::ArrayView input, const HvgOptions& o) {
+HvgResult highly_variable_genes(anndatapp::ArrayView input, const HvgOptions& o) {
     check_matrix(input); auto rows = input.extent(0), columns = input.extent(1);
     require(rows && columns, "HVG requires a nonempty matrix");
     require(o.method == HvgMethod::seurat || o.method == HvgMethod::cell_ranger, "unknown HVG method");
@@ -135,7 +135,7 @@ HvgResult highly_variable_genes(anndata::ArrayView input, const HvgOptions& o) {
     if (o.batches) {
         auto b = *o.batches;
         b.validate();
-        require(b.rank() == 1 && b.extent(0) == rows && b.layout() == anndata::Layout::dense, "batch codes must be a dense vector matching cells");
+        require(b.rank() == 1 && b.extent(0) == rows && b.layout() == anndatapp::Layout::dense, "batch codes must be a dense vector matching cells");
         auto bytes = b.bytes(); const auto* p = bytes.data(); auto stride = bytes.stride_bytes(0);
         std::map<std::uint64_t, std::size_t> codes;
         numeric(b.dtype(), [&]<class T>() {

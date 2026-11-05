@@ -16,7 +16,7 @@ if(NOT CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS)
   find_program(CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS
     NAMES clang-scan-deps-${_clang_major} clang-scan-deps REQUIRED)
 endif()
-find_package(anndata 0.1 CONFIG REQUIRED)
+find_package(anndatapp 0.1 CONFIG REQUIRED)
 
 option(PREPROCESS_BUILD_TESTS "Build native and installed-consumer tests" ${PROJECT_IS_TOP_LEVEL})
 option(PREPROCESS_BUILD_QUALIFICATION "Build independent Python reference driver" OFF)
@@ -32,7 +32,7 @@ target_sources(preprocess
   PUBLIC FILE_SET CXX_MODULES BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src"
     FILES src/preprocess.cppm
   PRIVATE src/preprocess.cpp src/hvg.cpp)
-target_link_libraries(preprocess PUBLIC anndata::anndata)
+target_link_libraries(preprocess PUBLIC anndatapp::anndatapp)
 target_compile_options(preprocess PRIVATE -Wall -Wextra -Wpedantic)
 
 if(PREPROCESS_ENABLE_SANITIZERS)
@@ -75,7 +75,7 @@ if(PREPROCESS_BUILD_TESTS)
     -DPREPROCESS_BUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
     -DPREPROCESS_COMPILER=${CMAKE_CXX_COMPILER}
     -DPREPROCESS_CONFIG=${CMAKE_BUILD_TYPE}
-    -DPREPROCESS_ANNDATA_DIR=${anndata_DIR}
+    -DPREPROCESS_ANNDATAPP_DIR=${anndatapp_DIR}
     -DPREPROCESS_SANITIZERS=${PREPROCESS_ENABLE_SANITIZERS}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test-installed-consumer.cmake)
 endif()

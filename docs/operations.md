@@ -2,7 +2,7 @@
 
 The pinned comparison is Scanpy 1.11.5. Matching numerical behavior does not
 require copying Scanpy's Python calling conventions. The public boundary uses
-anndata arrays, explicit options, owned results, and ArrayView or ArrayEdit.
+AnnData++ arrays, explicit options, owned results, and ArrayView or ArrayEdit.
 The source-version record is in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 ## Data and ownership
@@ -10,7 +10,7 @@ The source-version record is in [third-party notices](../THIRD_PARTY_NOTICES.md)
 Expression has shape observations by features. source(data, layer) acquires
 X or the named layer for reading; edit_source acquires its mutable view. Typed
 acquisition resolves dtype and layout before a numerical loop. Views retain
-anndata storage lifetime according to the anndata contract.
+AnnData++ storage lifetime according to the AnnData++ contract.
 
 Numerical overloads operate on matrix views directly. floating_copy explicitly
 converts integer or floating input while preserving dense or sparse storage.
@@ -18,10 +18,10 @@ dense_copy explicitly materializes sparse or logical gather input. Transform
 overloads accepting ArrayEdit mutate that buffer; their *_into counterparts
 read a source and write a supplied destination. There is no implicit deep copy.
 
-The implementation uses anndata's dense and sparse views directly, with local
+The implementation uses AnnData++ dense and sparse views directly, with local
 pointers, dimensions and strides for each calculation. Preprocessing adds
 operation-specific checks and calculations without another matrix descriptor
-or lifetime model. Same-dtype dense copies delegate to anndata's `copy_into`.
+or lifetime model. Same-dtype dense copies delegate to AnnData++ `copy_into`.
 
 Dense matrices support strides. Sparse inputs must be canonical CSR or CSC;
 structural offsets and indices retain independent widths, and explicitly stored
@@ -49,7 +49,7 @@ Top-N fractions are opt-in; the default `percent_top` list is empty.
 Filtering returns a boolean mask aligned to the selected axis. min_counts,
 max_counts, min_detected, and max_detected may be combined; all supplied
 bounds must pass. The result is a mask, not a hidden dataset mutation. Apply it
-with anndata slicing, and call copy() when an independent owner is required.
+with AnnData++ slicing, and call copy() when an independent owner is required.
 
 feature_stats returns feature means and sample variances. An optional
 observation mask selects rows for estimating those statistics.

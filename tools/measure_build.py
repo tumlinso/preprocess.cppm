@@ -41,10 +41,10 @@ def artifacts(root):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
-    p.add_argument("--anndata-prefix", type=Path, default=Path("build/deps/install"))
+    p.add_argument("--anndatapp-prefix", type=Path, default=Path("build/deps/install"))
     p.add_argument("--output", type=Path, default=Path("benchmarks/results/build.json"))
     a = p.parse_args()
-    source, dependency = a.source.resolve(), a.anndata_prefix.resolve()
+    source, dependency = a.source.resolve(), a.anndatapp_prefix.resolve()
     digest = hashlib.sha256()
     for base in (source / "src", source / "cmake"):
         for path in sorted(base.rglob("*")):
@@ -61,7 +61,7 @@ def main():
             "-DPREPROCESS_BUILD_TESTS=OFF", "-DPREPROCESS_BUILD_QUALIFICATION=OFF"])
         # Keep each compilation phase bounded while identifying dependency
         # interface cost separately from the numerical library and example.
-        measures["dependency_module_build_seconds"] = timed(["cmake", "--build", build, "--target", "anndata_cppm_module_interfaces", "-j2"])
+        measures["dependency_module_build_seconds"] = timed(["cmake", "--build", build, "--target", "anndatapp_module_interfaces", "-j2"])
         measures["library_build_seconds"] = timed(["cmake", "--build", build, "--target", "preprocess", "-j2"])
         measures["example_build_seconds"] = timed(["cmake", "--build", build, "--target", "preprocess_example", "-j2"])
         measures["clean_package_build_seconds"] = sum(measures[k] for k in
@@ -70,7 +70,7 @@ def main():
         measures["install_seconds"] = timed(["cmake", "--install", build, "--prefix", prefix])
         consumer.mkdir()
         (consumer / "CMakeLists.txt").write_text("cmake_minimum_required(VERSION 3.28)\nproject(probe LANGUAGES CXX)\nset(CMAKE_CXX_EXTENSIONS OFF)\nfind_package(preprocess CONFIG REQUIRED)\nadd_executable(probe main.cpp)\ntarget_link_libraries(probe PRIVATE preprocess::preprocess)\n")
-        (consumer / "main.cpp").write_text("import preprocess;\nint main() { auto x = anndata::Array::zeros<double>({2, 2}); return preprocess::feature_stats(x.view()).observations != 2; }\n")
+        (consumer / "main.cpp").write_text("import preprocess;\nint main() { auto x = anndatapp::Array::zeros<double>({2, 2}); return preprocess::feature_stats(x.view()).observations != 2; }\n")
         cb = root / "consumer-build"
         measures["consumer_configure_seconds"] = timed(["cmake", "-S", consumer, "-B", cb, "-G", "Ninja",
             "-DCMAKE_CXX_COMPILER=clang++-18", "-DCMAKE_BUILD_TYPE=Release", f"-DCMAKE_PREFIX_PATH={prefix};{dependency}"])
@@ -93,7 +93,7 @@ def main():
               "compiler": subprocess.check_output(["clang++-18", "--version"], text=True).splitlines()[0],
               "cmake": subprocess.check_output(["cmake", "--version"], text=True).splitlines()[0],
               "ninja": subprocess.check_output(["ninja", "--version"], text=True).strip(),
-              "anndata_prefix": str(dependency), "timeout_seconds_per_command": 30,
+              "anndatapp_prefix": str(dependency), "timeout_seconds_per_command": 30,
               "jobs": 2, "measurements": measures, "checks": checks,
               "limits": ["one bounded observation, not a comparative performance claim",
                          "clean package time sums separately bounded dependency-interface, library and example builds",

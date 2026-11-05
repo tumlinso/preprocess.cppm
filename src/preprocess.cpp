@@ -22,22 +22,22 @@ namespace preprocess {
 namespace {
 using namespace detail;
 
-void vector_shape(const anndata::Array& a, std::size_t n) {
+void vector_shape(const anndatapp::Array& a, std::size_t n) {
     require(a.rank() == 1 && a.extent(0) == n, "annotation vector does not match dataset axis");
 }
-bool present(const anndata::Array& a) { return a.rank() != 0; }
+bool present(const anndatapp::Array& a) { return a.rank() != 0; }
 std::uint64_t magnitude(std::ptrdiff_t n) { return n < 0 ? std::uint64_t(-(n+1))+1 : std::uint64_t(n); }
-void writable(anndata::ArrayView x) {
-    if (x.layout() != anndata::Layout::dense || !x.extent(0) || !x.extent(1)) return;
+void writable(anndatapp::ArrayView x) {
+    if (x.layout() != anndatapp::Layout::dense || !x.extent(0) || !x.extent(1)) return;
     auto b = x.bytes(); auto rows = b.extent(0), columns = b.extent(1);
     auto r = magnitude(b.stride_bytes(0)), c = magnitude(b.stride_bytes(1)), g = std::gcd(r,c);
     require(rows <= 1 || r != 0, "writable matrix rows overlap");
     require(columns <= 1 || c != 0, "writable matrix columns overlap");
     require(!g || !(c/g < rows && r/g < columns), "writable matrix elements overlap");
 }
-std::pair<std::uintptr_t,std::uintptr_t> interval(anndata::ArrayView x) {
+std::pair<std::uintptr_t,std::uintptr_t> interval(anndatapp::ArrayView x) {
     if (!x.extent(0) || !x.extent(1)) return {0,0};
-    if (x.layout() != anndata::Layout::dense) {
+    if (x.layout() != anndatapp::Layout::dense) {
         auto b = x.sparse_bytes(); if (!b.nnz()) return {0,0};
         auto p = std::uintptr_t(b.values()); return {p,p+b.nnz()*b.value_size()};
     }
@@ -46,39 +46,39 @@ std::pair<std::uintptr_t,std::uintptr_t> interval(anndata::ArrayView x) {
     return {p+std::min<std::ptrdiff_t>(r,0)+std::min<std::ptrdiff_t>(c,0),
             p+std::max<std::ptrdiff_t>(r,0)+std::max<std::ptrdiff_t>(c,0)+b.element_size()};
 }
-bool same_storage(anndata::ArrayView a, anndata::ArrayView b) {
+bool same_storage(anndatapp::ArrayView a, anndatapp::ArrayView b) {
     if (a.layout() != b.layout() || a.dtype() != b.dtype() || a.extent(0) != b.extent(0) || a.extent(1) != b.extent(1)) return false;
-    if (a.layout() == anndata::Layout::dense) {
+    if (a.layout() == anndatapp::Layout::dense) {
         auto x = a.bytes(), y = b.bytes();
         return x.data() == y.data() && x.stride_bytes(0) == y.stride_bytes(0) && x.stride_bytes(1) == y.stride_bytes(1);
     }
     auto x = a.sparse_bytes(), y = b.sparse_bytes();
     return x.values() == y.values() && x.indices() == y.indices() && x.offsets() == y.offsets();
 }
-void output_contract(anndata::ArrayView a, anndata::ArrayView b) {
+void output_contract(anndatapp::ArrayView a, anndatapp::ArrayView b) {
     check_matrix(b);
     require(a.extent(0) == b.extent(0) && a.extent(1) == b.extent(1), "destination shape differs from source");
-    require(b.dtype() == anndata::DType::float32 || b.dtype() == anndata::DType::float64, "destination must have FP32 or FP64 storage");
+    require(b.dtype() == anndatapp::DType::float32 || b.dtype() == anndatapp::DType::float64, "destination must have FP32 or FP64 storage");
     writable(b); auto [a0,a1] = interval(a); auto [b0,b1] = interval(b);
     require(a1 <= b0 || b1 <= a0 || same_storage(a,b), "source and destination partially overlap");
-    if (b.layout() != anndata::Layout::dense) {
+    if (b.layout() != anndatapp::Layout::dense) {
         require(a.layout() == b.layout(), "sparse destination layout differs from source");
         auto x = a.sparse_bytes(), y = b.sparse_bytes();
         require(x.nnz() == y.nnz() && x.index_size() == y.index_size() && x.offset_size() == y.offset_size(),
                 "sparse destination must have the same structure widths");
-        auto major = a.layout() == anndata::Layout::csr ? x.rows() : x.columns();
+        auto major = a.layout() == anndatapp::Layout::csr ? x.rows() : x.columns();
         require((!x.nnz() || std::memcmp(x.indices(),y.indices(),x.nnz()*x.index_size()) == 0)
                 && std::memcmp(x.offsets(),y.offsets(),(major+1)*x.offset_size()) == 0, "sparse destination structure differs from source");
     }
 }
-template<class F> void transform_into(anndata::ArrayView a, anndata::ArrayEdit output, F&& f) {
-    auto b = output.view(); output_contract(a,b); bool dense = b.layout() == anndata::Layout::dense;
+template<class F> void transform_into(anndatapp::ArrayView a, anndatapp::ArrayEdit output, F&& f) {
+    auto b = output.view(); output_contract(a,b); bool dense = b.layout() == anndatapp::Layout::dense;
     std::byte* p; std::ptrdiff_t sr = 0, sc = 0;
     if (dense) { auto d = output.bytes(); p = d.data(); sr = d.stride_bytes(0); sc = d.stride_bytes(1); }
     else p = output.sparse_bytes().values();
     auto rows = b.extent(0), columns = b.extent(1);
     floating(b.dtype(), [&]<class U>() {
-        if (dense && a.layout() != anndata::Layout::dense)
+        if (dense && a.layout() != anndatapp::Layout::dense)
             for (std::size_t i = 0; i < rows; ++i) for (std::size_t j = 0; j < columns; ++j)
                 store<U>(p+std::ptrdiff_t(i)*sr+std::ptrdiff_t(j)*sc,U(f(i,j,0)));
         numeric(a.dtype(), [&]<class T>() {
@@ -89,17 +89,17 @@ template<class F> void transform_into(anndata::ArrayView a, anndata::ArrayEdit o
         });
     });
 }
-void copy_values(anndata::ArrayView x, anndata::ArrayEdit output) {
+void copy_values(anndatapp::ArrayView x, anndatapp::ArrayEdit output) {
     auto y = output.view(); output_contract(x,y);
     if (same_storage(x,y)) return;
-    bool dense = y.layout() == anndata::Layout::dense;
-    if (dense && x.layout() == anndata::Layout::dense && x.dtype() == y.dtype()) { x.copy_into(output); return; }
+    bool dense = y.layout() == anndatapp::Layout::dense;
+    if (dense && x.layout() == anndatapp::Layout::dense && x.dtype() == y.dtype()) { x.copy_into(output); return; }
     std::byte* p; std::ptrdiff_t sr = 0, sc = 0;
     if (dense) { auto b = output.bytes(); p = b.data(); sr = b.stride_bytes(0); sc = b.stride_bytes(1); }
     else p = output.sparse_bytes().values();
     auto rows = y.extent(0), columns = y.extent(1);
     floating(y.dtype(),[&]<class U>() {
-        if (dense && x.layout() != anndata::Layout::dense)
+        if (dense && x.layout() != anndatapp::Layout::dense)
             for (std::size_t i = 0; i < rows; ++i) for (std::size_t j = 0; j < columns; ++j)
                 store<U>(p+std::ptrdiff_t(i)*sr+std::ptrdiff_t(j)*sc,U(0));
         numeric(x.dtype(),[&]<class T>() {
@@ -110,10 +110,10 @@ void copy_values(anndata::ArrayView x, anndata::ArrayEdit output) {
         });
     });
 }
-template<class F> void transform(anndata::ArrayEdit a, F&& f) {
+template<class F> void transform(anndatapp::ArrayEdit a, F&& f) {
     auto x = a.view(); check_matrix(x); writable(x);
     floating(x.dtype(), [&]<class T>() {
-        if (x.layout() == anndata::Layout::dense) {
+        if (x.layout() == anndatapp::Layout::dense) {
             auto b = a.bytes(); auto* p = b.data(); auto rows = b.extent(0), columns = b.extent(1);
             auto sr = b.stride_bytes(0), sc = b.stride_bytes(1);
             for (std::size_t i = 0; i < rows; ++i) for (std::size_t j = 0; j < columns; ++j) {
@@ -125,7 +125,7 @@ template<class F> void transform(anndata::ArrayEdit a, F&& f) {
         }
     });
 }
-anndata::Array filter(const AxisSummary& a, const FilterBounds& b) {
+anndatapp::Array filter(const AxisSummary& a, const FilterBounds& b) {
     auto n = a.total.extent(0);
     auto totals = doubles(a.total.view(),n), counts = doubles(a.detected.view(),n);
     require(!b.min_counts || std::isfinite(*b.min_counts), "minimum count must be finite");
@@ -142,12 +142,12 @@ double log_divisor(std::optional<double> base) {
     require(!base || (std::isfinite(*base) && *base > 0 && *base != 1), "logarithm base must be positive, finite, and different from one");
     return base ? std::log(*base) : 1;
 }
-anndata::Array log_array(const std::vector<double>& x) {
+anndatapp::Array log_array(const std::vector<double>& x) {
     std::vector<double> y(x.size());
     for (std::size_t i = 0; i < x.size(); ++i) y[i] = std::log1p(x[i]);
     return array(y);
 }
-Normalization factors(anndata::ArrayView x, const NormalizationOptions& options) {
+Normalization factors(anndatapp::ArrayView x, const NormalizationOptions& options) {
     auto rows = x.extent(0), columns = x.extent(1);
     require(!options.target_sum || (std::isfinite(*options.target_sum) && *options.target_sum > 0), "normalization target must be positive and finite");
     require(std::isfinite(options.max_fraction) && options.max_fraction >= 0 && options.max_fraction <= 1, "max_fraction must be in [0,1]");
@@ -180,22 +180,22 @@ Normalization factors(anndata::ArrayView x, const NormalizationOptions& options)
 void scale_options(const ScaleOptions& o) {
     require(!o.max_value || (std::isfinite(*o.max_value) && *o.max_value >= 0), "scale clipping limit must be nonnegative and finite");
 }
-Scaling scaling(anndata::ArrayView x, const ScaleOptions& options) {
+Scaling scaling(anndatapp::ArrayView x, const ScaleOptions& options) {
     auto stats = feature_stats(x,options.observations);
-    auto n = stats.variance.extent(0); auto out = anndata::Array::empty<double>({n});
+    auto n = stats.variance.extent(0); auto out = anndatapp::Array::empty<double>({n});
     auto* p = out.edit().dense<double>().data(); auto* v = stats.variance.view().dense<double>().data();
     for (std::size_t j = 0; j < n; ++j) p[j] = v[j] == 0 ? 1 : std::sqrt(v[j]);
     return {std::move(stats.mean),std::move(out)};
 }
-using Columns = std::vector<std::pair<std::string,anndata::Column>>;
-void column(Columns& columns, std::string name, anndata::Array a) {
-    columns.emplace_back(std::move(name),anndata::Column::numeric(std::move(a)));
+using Columns = std::vector<std::pair<std::string,anndatapp::Column>>;
+void column(Columns& columns, std::string name, anndatapp::Array a) {
+    columns.emplace_back(std::move(name),anndatapp::Column::numeric(std::move(a)));
 }
-void attach_obs(anndata::AnnData& a, Columns& columns) { for (auto& [name,c] : columns) a.set_obs_column(std::move(name),std::move(c)); }
-void attach_var(anndata::AnnData& a, Columns& columns) { for (auto& [name,c] : columns) a.set_var_column(std::move(name),std::move(c)); }
+void attach_obs(anndatapp::AnnData& a, Columns& columns) { for (auto& [name,c] : columns) a.set_obs_column(std::move(name),std::move(c)); }
+void attach_var(anndatapp::AnnData& a, Columns& columns) { for (auto& [name,c] : columns) a.set_var_column(std::move(name),std::move(c)); }
 } // namespace
 
-QcResult qc(anndata::ArrayView x, const QcOptions& options) {
+QcResult qc(anndatapp::ArrayView x, const QcOptions& options) {
     check_matrix(x); auto rows = x.extent(0), columns = x.extent(1);
     std::vector<double> cell_total(rows,0), gene_total(columns,0), mean(columns), dropout(columns);
     std::vector<std::uint64_t> cell_detected(rows,0), gene_detected(columns,0);
@@ -234,7 +234,7 @@ QcResult qc(anndata::ArrayView x, const QcOptions& options) {
         GroupQc result{options.groups[g].name,array(groups[g]),array(percent),{}};
         if (options.log1p) result.log_total = log_array(groups[g]); out.groups.push_back(std::move(result));
     }
-    out.top_percent = anndata::Array::empty<double>({rows,options.percent_top.size()});
+    out.top_percent = anndatapp::Array::empty<double>({rows,options.percent_top.size()});
     if (!options.percent_top.empty()) {
         auto* p = out.top_percent.edit().dense<double>().data(); std::vector<double> row(columns);
         auto emit = [&](std::size_t i) {
@@ -243,11 +243,11 @@ QcResult qc(anndata::ArrayView x, const QcOptions& options) {
                 p[i*options.percent_top.size()+k] = 100*row[options.percent_top[k]-1]/cell_total[i];
         };
         numeric(x.dtype(), [&]<class T>() {
-            if (x.layout() == anndata::Layout::dense) {
+            if (x.layout() == anndatapp::Layout::dense) {
                 auto b = x.bytes();
                 for (std::size_t i = 0; i < rows; ++i) { dense_row<T>(b,i,row.data()); emit(i); }
             } else {
-                auto b = x.sparse_bytes(); bool csr = x.layout() == anndata::Layout::csr;
+                auto b = x.sparse_bytes(); bool csr = x.layout() == anndatapp::Layout::csr;
                 indices(b,[&]<class I, class O>() {
                     for (std::size_t i = 0; i < rows; ++i) { sparse_row<T,I,O>(b,csr,i,row.data()); emit(i); }
                 });
@@ -257,12 +257,12 @@ QcResult qc(anndata::ArrayView x, const QcOptions& options) {
     return out;
 }
 
-anndata::Array filter_cells(const QcResult& q, const FilterBounds& bounds) { return filter(q.cells,bounds); }
-anndata::Array filter_genes(const QcResult& q, const FilterBounds& bounds) { return filter(q.genes,bounds); }
-anndata::Array filter_cells(anndata::ArrayView x, const FilterBounds& bounds) { QcOptions o; o.log1p = false; return filter_cells(qc(x,o),bounds); }
-anndata::Array filter_genes(anndata::ArrayView x, const FilterBounds& bounds) { QcOptions o; o.log1p = false; return filter_genes(qc(x,o),bounds); }
+anndatapp::Array filter_cells(const QcResult& q, const FilterBounds& bounds) { return filter(q.cells,bounds); }
+anndatapp::Array filter_genes(const QcResult& q, const FilterBounds& bounds) { return filter(q.genes,bounds); }
+anndatapp::Array filter_cells(anndatapp::ArrayView x, const FilterBounds& bounds) { QcOptions o; o.log1p = false; return filter_cells(qc(x,o),bounds); }
+anndatapp::Array filter_genes(anndatapp::ArrayView x, const FilterBounds& bounds) { QcOptions o; o.log1p = false; return filter_genes(qc(x,o),bounds); }
 
-FeatureStats feature_stats(anndata::ArrayView x, std::optional<anndata::ArrayView> observations) {
+FeatureStats feature_stats(anndatapp::ArrayView x, std::optional<anndatapp::ArrayView> observations) {
     check_matrix(x); auto rows = x.extent(0), columns = x.extent(1); auto selected = mask(observations,rows);
     auto n = std::size_t(std::count(selected.begin(),selected.end(),std::uint8_t(1)));
     std::vector<double> mean(columns,0), variance(columns,0);
@@ -283,60 +283,60 @@ FeatureStats feature_stats(anndata::ArrayView x, std::optional<anndata::ArrayVie
     return {array(mean),array(variance),n};
 }
 
-Normalization normalize_total(anndata::ArrayEdit x, const NormalizationOptions& options) {
+Normalization normalize_total(anndatapp::ArrayEdit x, const NormalizationOptions& options) {
     auto view = x.view(); check_matrix(view); floating(view.dtype(), []<class T>() {}); writable(view);
     auto out = factors(view,options); auto f = out.factors.view().dense<double>();
     transform(x,[&](std::size_t i, std::size_t, double v) { return f.data()[i] > 0 ? v/f.data()[i] : v; }); return out;
 }
-Normalization normalize_total_into(anndata::ArrayView x, anndata::ArrayEdit destination, const NormalizationOptions& options) {
+Normalization normalize_total_into(anndatapp::ArrayView x, anndatapp::ArrayEdit destination, const NormalizationOptions& options) {
     check_matrix(x); output_contract(x,destination.view()); auto out = factors(x,options);
     auto f = out.factors.view().dense<double>();
     transform_into(x,destination,[&](std::size_t i, std::size_t, double v) { return f.data()[i] > 0 ? v/f.data()[i] : v; }); return out;
 }
-void log1p(anndata::ArrayEdit x, std::optional<double> base) {
+void log1p(anndatapp::ArrayEdit x, std::optional<double> base) {
     auto d = log_divisor(base); transform(x,[&](std::size_t, std::size_t, double v) { return std::log1p(v)/d; });
 }
-void log1p_into(anndata::ArrayView x, anndata::ArrayEdit destination, std::optional<double> base) {
+void log1p_into(anndatapp::ArrayView x, anndatapp::ArrayEdit destination, std::optional<double> base) {
     auto d = log_divisor(base); check_matrix(x);
     transform_into(x,destination,[&](std::size_t, std::size_t, double v) { return std::log1p(v)/d; });
 }
 
-anndata::Array floating_copy(anndata::ArrayView x, anndata::DType type) {
+anndatapp::Array floating_copy(anndatapp::ArrayView x, anndatapp::DType type) {
     check_matrix(x); auto rows = x.extent(0), columns = x.extent(1);
-    return floating(type,[&]<class T>() -> anndata::Array {
-        if (x.layout() == anndata::Layout::dense) {
-            auto out = anndata::Array::empty<T>({rows,columns}); copy_values(x,out.edit()); return out;
+    return floating(type,[&]<class T>() -> anndatapp::Array {
+        if (x.layout() == anndatapp::Layout::dense) {
+            auto out = anndatapp::Array::empty<T>({rows,columns}); copy_values(x,out.edit()); return out;
         }
-        auto b = x.sparse_bytes(); auto values = anndata::Array::empty<T>({b.nnz()});
-        auto copy_structure = [&](anndata::DType dtype, const std::byte* src, std::size_t n) {
+        auto b = x.sparse_bytes(); auto values = anndatapp::Array::empty<T>({b.nnz()});
+        auto copy_structure = [&](anndatapp::DType dtype, const std::byte* src, std::size_t n) {
             return numeric(dtype,[&]<class I>() {
-                auto out = anndata::Array::empty<I>({n}); if (n) std::memcpy(out.edit().bytes().data(),src,n*sizeof(I)); return out;
+                auto out = anndatapp::Array::empty<I>({n}); if (n) std::memcpy(out.edit().bytes().data(),src,n*sizeof(I)); return out;
             });
         };
         auto ix = copy_structure(x.index_dtype(),b.indices(),b.nnz());
-        auto ptr = copy_structure(x.offset_dtype(),b.offsets(),(x.layout() == anndata::Layout::csr ? rows : columns)+1);
-        auto out = anndata::Array::from_sparse_buffers(x.layout(),std::move(values),std::move(ix),std::move(ptr),rows,columns);
+        auto ptr = copy_structure(x.offset_dtype(),b.offsets(),(x.layout() == anndatapp::Layout::csr ? rows : columns)+1);
+        auto out = anndatapp::Array::from_sparse_buffers(x.layout(),std::move(values),std::move(ix),std::move(ptr),rows,columns);
         copy_values(x,out.edit()); return out;
     });
 }
-anndata::Array dense_copy(anndata::ArrayView x, anndata::DType type) {
+anndatapp::Array dense_copy(anndatapp::ArrayView x, anndatapp::DType type) {
     floating(type,[]<class T>() {});
-    x.validate(); anndata::Array retained; bool materialized = false;
+    x.validate(); anndatapp::Array retained; bool materialized = false;
     try {
-        if (x.layout() == anndata::Layout::dense) (void)x.bytes();
+        if (x.layout() == anndatapp::Layout::dense) (void)x.bytes();
         else (void)x.sparse_bytes();
-    } catch (const anndata::Error& e) {
-        if (e.code() != anndata::ErrorCode::unsupported_layout && e.code() != anndata::ErrorCode::non_contiguous) throw;
+    } catch (const anndatapp::Error& e) {
+        if (e.code() != anndatapp::ErrorCode::unsupported_layout && e.code() != anndatapp::ErrorCode::non_contiguous) throw;
         retained = x.copy(); x = retained.view(); materialized = true;
     }
     check_matrix(x,materialized); auto rows = x.extent(0), columns = x.extent(1);
-    return floating(type,[&]<class T>() { auto out = anndata::Array::empty<T>({rows,columns}); copy_values(x,out.edit()); return out; });
+    return floating(type,[&]<class T>() { auto out = anndatapp::Array::empty<T>({rows,columns}); copy_values(x,out.edit()); return out; });
 }
 
-void apply_scale(anndata::ArrayEdit x, const Scaling& parameters, const ScaleOptions& options) {
+void apply_scale(anndatapp::ArrayEdit x, const Scaling& parameters, const ScaleOptions& options) {
     scale_options(options); auto view = x.view(); check_matrix(view); writable(view);
     floating(x.view().dtype(),[]<class T>() {});
-    require(!options.zero_center || view.layout() == anndata::Layout::dense, "centered sparse scaling requires an explicit dense destination");
+    require(!options.zero_center || view.layout() == anndatapp::Layout::dense, "centered sparse scaling requires an explicit dense destination");
     auto columns = view.extent(1); auto mean = doubles(parameters.mean.view(),columns), sd = doubles(parameters.stddev.view(),columns);
     auto selected = mask(options.observations,view.extent(0));
     if (std::find(selected.begin(),selected.end(),std::uint8_t(1)) != selected.end())
@@ -348,15 +348,15 @@ void apply_scale(anndata::ArrayEdit x, const Scaling& parameters, const ScaleOpt
         return !options.max_value ? v : options.zero_center ? std::clamp(v,-*options.max_value,*options.max_value) : std::min(v,*options.max_value);
     });
 }
-Scaling scale(anndata::ArrayEdit x, const ScaleOptions& options) {
+Scaling scale(anndatapp::ArrayEdit x, const ScaleOptions& options) {
     scale_options(options); auto view = x.view(); check_matrix(view); writable(view);
-    require(!options.zero_center || view.layout() == anndata::Layout::dense, "centered sparse scaling requires an explicit dense destination");
+    require(!options.zero_center || view.layout() == anndatapp::Layout::dense, "centered sparse scaling requires an explicit dense destination");
     floating(x.view().dtype(),[]<class T>() {});
     auto out = scaling(x.view(),options); apply_scale(x,out,options); return out;
 }
-Scaling scale_into(anndata::ArrayView x, anndata::ArrayEdit destination, const ScaleOptions& options) {
+Scaling scale_into(anndatapp::ArrayView x, anndatapp::ArrayEdit destination, const ScaleOptions& options) {
     scale_options(options); check_matrix(x); output_contract(x,destination.view());
-    require(!options.zero_center || destination.view().layout() == anndata::Layout::dense, "centered sparse scaling requires an explicit dense destination");
+    require(!options.zero_center || destination.view().layout() == anndatapp::Layout::dense, "centered sparse scaling requires an explicit dense destination");
     auto out = scaling(x,options); auto columns = x.extent(1); auto mean = doubles(out.mean.view(),columns), sd = doubles(out.stddev.view(),columns);
     auto selected = mask(options.observations,x.extent(0));
     transform_into(x,destination,[&](std::size_t i, std::size_t j, double v) {
@@ -367,19 +367,19 @@ Scaling scale_into(anndata::ArrayView x, anndata::ArrayEdit destination, const S
     return out;
 }
 
-anndata::ArrayView source(const anndata::AnnData& data, std::string_view layer) { return layer.empty() ? data.x() : data.layer(layer); }
-anndata::ArrayEdit edit_source(anndata::AnnData& data, std::string_view layer) { return layer.empty() ? data.edit_x() : data.edit_layer(layer); }
-anndata::Array batch_codes(const anndata::AnnData& data, std::string_view column_name) {
+anndatapp::ArrayView source(const anndatapp::AnnData& data, std::string_view layer) { return layer.empty() ? data.x() : data.layer(layer); }
+anndatapp::ArrayEdit edit_source(anndatapp::AnnData& data, std::string_view layer) { return layer.empty() ? data.edit_x() : data.edit_layer(layer); }
+anndatapp::Array batch_codes(const anndatapp::AnnData& data, std::string_view column_name) {
     auto c = data.obs_column(column_name); std::vector<std::int64_t> codes(c.size()); std::map<std::string,std::int64_t> labels;
     for (std::size_t i = 0; i < c.size(); ++i) require(c.valid(i), "batch labels must not be missing");
-    if (c.kind() == anndata::ColumnKind::categorical) {
+    if (c.kind() == anndatapp::ColumnKind::categorical) {
         for (std::size_t i = 0; i < c.size(); ++i) { codes[i] = c.code(i); require(codes[i] >= 0, "batch labels must not be missing"); }
-    } else if (c.kind() == anndata::ColumnKind::string) {
+    } else if (c.kind() == anndatapp::ColumnKind::string) {
         for (std::size_t i = 0; i < c.size(); ++i) {
             auto [it,inserted] = labels.emplace(std::string(c.string(i)),std::int64_t(labels.size())); codes[i] = it->second;
         }
     } else {
-        auto values = c.values(); require(values.dtype() != anndata::DType::float32 && values.dtype() != anndata::DType::float64, "numeric batch labels must be integers");
+        auto values = c.values(); require(values.dtype() != anndatapp::DType::float32 && values.dtype() != anndatapp::DType::float64, "numeric batch labels must be integers");
         values.validate(); auto b = values.bytes(); const auto* p = b.data(); auto stride = b.stride_bytes(0);
         numeric(values.dtype(),[&]<class T>() {
             for (std::size_t i = 0; i < c.size(); ++i) {
@@ -391,7 +391,7 @@ anndata::Array batch_codes(const anndata::AnnData& data, std::string_view column
     return array(codes);
 }
 
-void annotate_qc(anndata::AnnData& data, QcResult&& q) {
+void annotate_qc(anndatapp::AnnData& data, QcResult&& q) {
     auto n = data.n_obs(), p = data.n_vars();
     for (auto* a : {&q.cells.total,&q.cells.detected}) vector_shape(*a,n);
     for (auto* a : {&q.genes.total,&q.genes.detected,&q.mean,&q.dropout}) vector_shape(*a,p);
@@ -419,26 +419,26 @@ void annotate_qc(anndata::AnnData& data, QcResult&& q) {
     }
     auto values = q.top_percent.view().dense<double>();
     for (std::size_t k = 0; k < q.percent_top.size(); ++k) {
-        auto a = anndata::Array::empty<double>({n}); auto* dst = a.edit().dense<double>().data();
+        auto a = anndatapp::Array::empty<double>({n}); auto* dst = a.edit().dense<double>().data();
         for (std::size_t i = 0; i < n; ++i) dst[i] = values.data()[std::ptrdiff_t(i)*values.stride(0)+std::ptrdiff_t(k)*values.stride(1)];
         column(obs,"pct_counts_in_top_"+std::to_string(q.percent_top[k])+"_genes",std::move(a));
     }
     attach_obs(data,obs); attach_var(data,var);
 }
-void annotate_normalization(anndata::AnnData& data, Normalization&& result, std::string_view key) {
+void annotate_normalization(anndatapp::AnnData& data, Normalization&& result, std::string_view key) {
     vector_shape(result.factors,data.n_obs()); vector_shape(result.included_genes,data.n_vars());
     require(!key.empty(), "normalization annotation key must not be empty");
-    data.set_obs_column(std::string(key),anndata::Column::numeric(std::move(result.factors)));
+    data.set_obs_column(std::string(key),anndatapp::Column::numeric(std::move(result.factors)));
 }
-void annotate_log1p(anndata::AnnData& data, std::optional<double> base) {
-    log_divisor(base); auto e = anndata::Element::mapping();
-    e.set("base",base ? anndata::Element(*base) : anndata::Element(nullptr)); data.set_uns("log1p",std::move(e));
+void annotate_log1p(anndatapp::AnnData& data, std::optional<double> base) {
+    log_divisor(base); auto e = anndatapp::Element::mapping();
+    e.set("base",base ? anndatapp::Element(*base) : anndatapp::Element(nullptr)); data.set_uns("log1p",std::move(e));
 }
-void annotate_scale(anndata::AnnData& data, Scaling&& parameters) {
+void annotate_scale(anndatapp::AnnData& data, Scaling&& parameters) {
     vector_shape(parameters.mean,data.n_vars()); vector_shape(parameters.stddev,data.n_vars());
     Columns columns; column(columns,"mean",std::move(parameters.mean)); column(columns,"std",std::move(parameters.stddev)); attach_var(data,columns);
 }
-void annotate_hvg(anndata::AnnData& data, HvgResult&& result) {
+void annotate_hvg(anndatapp::AnnData& data, HvgResult&& result) {
     auto p = data.n_vars();
     for (auto* a : {&result.mean,&result.dispersion,&result.normalized_dispersion,&result.selected}) vector_shape(*a,p);
     require(present(result.nbatches) == present(result.intersection), "HVG batch annotations must occur together");
@@ -449,7 +449,7 @@ void annotate_hvg(anndata::AnnData& data, HvgResult&& result) {
     if (present(result.nbatches)) {
         column(columns,"highly_variable_nbatches",std::move(result.nbatches)); column(columns,"highly_variable_intersection",std::move(result.intersection));
     }
-    auto e = anndata::Element::mapping(); e.set("flavor",anndata::Element(result.method == HvgMethod::seurat ? "seurat" : "cell_ranger"));
+    auto e = anndatapp::Element::mapping(); e.set("flavor",anndatapp::Element(result.method == HvgMethod::seurat ? "seurat" : "cell_ranger"));
     attach_var(data,columns); data.set_uns("hvg",std::move(e));
 }
 

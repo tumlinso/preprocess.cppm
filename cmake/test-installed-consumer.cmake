@@ -13,7 +13,7 @@ checked("${CMAKE_COMMAND}" -S "${PREPROCESS_SOURCE_DIR}/tests/consumer"
   -B "${consumer}" -G Ninja
   "-DCMAKE_CXX_COMPILER=${PREPROCESS_COMPILER}"
   "-DCMAKE_BUILD_TYPE=${PREPROCESS_CONFIG}"
-  "-DCMAKE_PREFIX_PATH=${prefix}\\;${PREPROCESS_ANNDATA_DIR}/../../.."
+  "-DCMAKE_PREFIX_PATH=${prefix}\\;${PREPROCESS_ANNDATAPP_DIR}/../../.."
   "-DPREPROCESS_SANITIZERS=${PREPROCESS_SANITIZERS}")
 checked("${CMAKE_COMMAND}" --build "${consumer}" --parallel 2)
 checked("${consumer}/consumer")

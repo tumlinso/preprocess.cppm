@@ -3,7 +3,7 @@
 ## Purpose and boundaries
 
 preprocess.cppm is a small C++20 library of reusable biological preprocessing
-calculations built on anndata.cppm. Its public functions provide an explicit
+calculations built on AnnData++. Its public functions provide an explicit
 CPU reference for Cellerator and other native consumers. Scanpy supplies pinned
 numerical comparison behavior; it does not dictate Python-style call semantics.
 Numerical similarity is required; bitwise identity and universal equality of
@@ -11,7 +11,7 @@ intermediates are not requirements. Explain consequential differences and
 qualify them with scientific quantities and tolerances.
 
 The dependency direction is downstream: Cellerator may use this package.
-preprocess depends on anndata. It does not depend on Python, Scanpy at runtime,
+preprocess depends on AnnData++. It does not depend on Python, Scanpy at runtime,
 Torch, CUDA, or Cellerator. Keep preprocessing, fitting, PCA, neighbors, GPU
 execution, and dataset orchestration as separate concerns.
 
@@ -27,8 +27,8 @@ execution, and dataset orchestration as separate concerns.
   implementation-only code in compiled source files.
 - Use direct arrays, pointers, extents, strides, sparse offsets and indices.
   Make allocation, conversion, mutation, and materialization explicit.
-- Use anndata's views directly. Keep shape, layout, lifetime and buffer
-  representation with anndata; do not maintain a parallel matrix abstraction.
+- Use AnnData++ views directly. Keep shape, layout, lifetime and buffer
+  representation with AnnData++; do not maintain a parallel matrix abstraction.
   Preprocess owns numerical operations and their additional contracts.
 - Resolve validation and representation dispatch at acquisition boundaries.
   Keep element loops free of type-erased dispatch, repeated validation and
@@ -42,7 +42,7 @@ Use Linux, Clang 18 with matching clang-scan-deps, CMake 3.28 or newer, and
 Ninja 1.11 or newer.
 
 ~~~sh
-sh tools/build_anndata.sh /path/to/anndata.cppm
+sh tools/build_anndatapp.sh /path/to/anndatapp
 cmake --workflow --preset native-check
 
 cmake --preset sanitizers
@@ -65,7 +65,7 @@ is registered as a source project. This repository does not bootstrap a Todo
 authority, credentials, task, or host runtime.
 
 Preserve unknown work and supplied inputs. Do not reset or clean Git state,
-force-push, replace authority data, or edit sibling anndata or Cellerator
+force-push, replace authority data, or edit sibling AnnData++ or Cellerator
 repositories. Keep generated builds, local reference environments, data and
 raw reports out of Git.
 

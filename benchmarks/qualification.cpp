@@ -48,14 +48,14 @@ void operator delete[](void* p, std::size_t, std::align_val_t) noexcept { std::f
 static long peak_rss() { rusage r{}; getrusage(RUSAGE_SELF, &r); return r.ru_maxrss; }
 
 template<class T>
-static anndata::Array input(std::size_t n, std::size_t m, bool sparse, std::size_t& nnz) {
+static anndatapp::Array input(std::size_t n, std::size_t m, bool sparse, std::size_t& nnz) {
     std::minstd_rand rng(1729);
     std::uniform_real_distribution<double> u(0, 1);
     std::vector<T> values;
     std::vector<std::int32_t> indices;
     std::vector<std::int64_t> offsets(n + 1);
-    anndata::Array x;
-    if (!sparse) x = anndata::Array::zeros<T>({n, m});
+    anndatapp::Array x;
+    if (!sparse) x = anndatapp::Array::zeros<T>({n, m});
     T* dense = sparse ? nullptr : x.edit().template dense<T>().data();
     for (std::size_t i = 0; i < n; ++i) {
         for (std::size_t j = 0; j < m; ++j) {
@@ -68,7 +68,7 @@ static anndata::Array input(std::size_t n, std::size_t m, bool sparse, std::size
         offsets[i + 1] = std::int64_t(values.size());
     }
     if (!sparse) return x;
-    x = anndata::Array::csr<T, std::int32_t, std::int64_t>(n, m, nnz);
+    x = anndatapp::Array::csr<T, std::int32_t, std::int64_t>(n, m, nnz);
     auto s = x.edit().template csr<T, std::int32_t, std::int64_t>();
     for (std::size_t k = 0; k < nnz; ++k) { s.values()[k] = values[k]; s.unsafe_indices()[k] = indices[k]; }
     for (std::size_t i = 0; i <= n; ++i) s.unsafe_offsets()[i] = offsets[i];

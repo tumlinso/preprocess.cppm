@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(anndata 0.1 CONFIG REQUIRED)
+find_dependency(anndatapp 0.1 CONFIG REQUIRED)
 
 if(TARGET preprocess::preprocess)
   check_required_components(preprocess)

@@ -9,15 +9,15 @@ not.
 
 The reference local dependency was anndata.cppm commit
 dc946845e1457299351b0ffc4ba36ef91d49db7b. The helper accepts a path to a
-checkout, builds anndata's dependency-free core in build/deps, and installs
+checkout, builds the dependency-free AnnData++ core in build/deps, and installs
 it in build/deps/install. It does not change the supplied checkout.
 
 ~~~sh
-sh tools/build_anndata.sh /path/to/anndata.cppm
+sh tools/build_anndatapp.sh /path/to/anndatapp
 cmake --workflow --preset native-check
 ~~~
 
-An installed anndata package may also be selected by setting
+An installed AnnData++ package may also be selected by setting
 CMAKE_PREFIX_PATH. The package installs its named-module interface sources,
 CMake target, version file and third-party notice. Consumers require compatible
 compiler and standard-library module artifacts; they build their own BMIs.

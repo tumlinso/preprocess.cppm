@@ -2,7 +2,7 @@
 
 preprocess.cppm is a small native C++20 library of reusable preprocessing
 calculations for annotated biological data. It requires
-[anndata.cppm](https://github.com/tumlinso/anndata.cppm) and provides a direct
+[AnnData++](https://github.com/tumlinso/anndatapp) and provides a direct
 CPU reference based on Scanpy's numerical behavior.
 
 The interface is C++-native: typed options and results, explicit ownership,
@@ -11,7 +11,7 @@ the calculations or compare specialized implementations with the reference.
 The package has no runtime dependency on Python, Scanpy, Torch, CUDA, or
 Cellerator.
 
-The example below assumes an existing `anndata::AnnData` named `data`; a
+The example below assumes an existing `anndatapp::AnnData` named `data`; a
 complete compiled example is in [examples/basic.cpp](examples/basic.cpp).
 
 ~~~cpp
@@ -22,7 +22,7 @@ auto result = preprocess::qc(preprocess::source(data));
 auto cells = preprocess::filter_cells(result, {.min_detected = 200});
 
 auto normalized = preprocess::floating_copy(
-    preprocess::source(data), anndata::DType::float32);
+    preprocess::source(data), anndatapp::DType::float32);
 auto factors = preprocess::normalize_total(
     normalized.edit(), {.target_sum = 1e4});
 preprocess::log1p(normalized.edit());
@@ -41,11 +41,11 @@ construction, Seurat v3, dataset orchestration, or device execution. See
 ## Build
 
 The qualified toolchain is Linux, Clang 18 with matching clang-scan-deps,
-CMake 3.28 or newer, and Ninja 1.11 or newer. Build anndata's dependency-free
+CMake 3.28 or newer, and Ninja 1.11 or newer. Build the dependency-free AnnData++
 core from a supplied checkout, then build and test preprocess:
 
 ~~~sh
-sh tools/build_anndata.sh /path/to/anndata.cppm
+sh tools/build_anndatapp.sh /path/to/anndatapp
 cmake --workflow --preset native-check
 ~~~
 
